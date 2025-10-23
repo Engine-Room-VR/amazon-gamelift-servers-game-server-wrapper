@@ -25,4 +25,12 @@ type HostingStart struct {
 	MatchmakerData            string
 	MaximumPlayerSessionCount int
 	Provider                  config.Provider
+	AwsCredentials            *AwsCredentials
+}
+
+// AwsCredentials represents temporary AWS credentials provided by GameLift fleet role.
+type AwsCredentials struct {
+	AccessKeyId     string
+	SecretAccessKey string
+	SessionToken    string
 }

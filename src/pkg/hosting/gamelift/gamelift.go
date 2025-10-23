@@ -50,10 +50,13 @@ type gamelift struct {
 }
 
 type Config struct {
-	GamePort               int
-	Anywhere               config.Anywhere // Contains configuration for GameLift Anywhere fleet
-	LogDirectory           string          // Specifies the directory for general logging
-	GameServerLogDirectory string          // Specifies the directory for game server specific logs
+	GamePort                   int
+	Anywhere                   config.Anywhere // Contains configuration for GameLift Anywhere fleet
+	LogDirectory               string          // Specifies the directory for general logging
+	GameServerLogDirectory     string          // Specifies the directory for game server specific logs
+	InjectFleetRoleCredentials bool            // Toggles calling GetFleetRoleCredentials for managed fleets
+	RoleArn                    string          // Optional: Role ARN to request credentials for
+	RoleSessionName            string          // Optional: Session name to use for assuming the role
 }
 
 // Init initializes the Amazon GameLift SDK with the provided configuration.
@@ -269,6 +272,32 @@ func (gameLift *gamelift) glOnStartGameSession(gs model.GameSession) {
 	if err := gameLift.sdk.ActivateGameSession(gameLift.ctx); err != nil {
 		gameLift.ec <- err
 		return
+	}
+
+	// Log configuration for credential injection
+	isAnywhere := gameLift.cfg.Anywhere.Host.FleetArn != ""
+	gameLift.logger.DebugContext(gameLift.ctx, "GetFleetRoleCredentials configuration",
+		"injectEnabled", gameLift.cfg.InjectFleetRoleCredentials,
+		"anywhereFleet", isAnywhere,
+	)
+
+	// Optionally get fleet role credentials for managed EC2/containers if enabled in config
+	if gameLift.cfg.Anywhere.Host.FleetArn == "" && gameLift.cfg.InjectFleetRoleCredentials {
+		gameLift.logger.DebugContext(gameLift.ctx, "InjectFleetRoleCredentials enabled for managed fleet; attempting to retrieve credentials")
+		// Compute role session name if not provided
+		roleSessionName := gameLift.cfg.RoleSessionName
+		if len(roleSessionName) == 0 {
+			roleSessionName = gameLift.runId.String()
+		}
+		if accessKey, secretKey, sessionToken, credErr := gameLift.sdk.GetFleetRoleCredentials(gameLift.ctx, gameLift.cfg.RoleArn, roleSessionName); credErr != nil {
+			gameLift.logger.WarnContext(gameLift.ctx, "failed to get fleet role credentials", "err", credErr)
+		} else {
+			hse.AwsCredentials = &events.AwsCredentials{
+				AccessKeyId:     accessKey,
+				SecretAccessKey: secretKey,
+				SessionToken:    sessionToken,
+			}
+		}
 	}
 
 	gameLift.logger.DebugContext(gameLift.ctx, "calling onHostingStart")

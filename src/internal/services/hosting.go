@@ -21,10 +21,13 @@ import (
 func getHosting(ctx context.Context, cfg *config.Config, logger *slog.Logger, spanner observability.Spanner) (hosting.Service, error) {
 	logger.DebugContext(ctx, "Initializing Amazon GameLift hosting service")
 	return gamelift.New(ctx, &gamelift.Config{
-		GamePort:               cfg.Ports.GamePort,
-		Anywhere:               cfg.Hosting.GameLift.Anywhere,
-		LogDirectory:           cfg.Hosting.LogDirectory,
-		GameServerLogDirectory: cfg.Hosting.AbsoluteGameServerLogDirectory,
+		GamePort:                   cfg.Ports.GamePort,
+		Anywhere:                   cfg.Hosting.GameLift.Anywhere,
+		LogDirectory:               cfg.Hosting.LogDirectory,
+		GameServerLogDirectory:     cfg.Hosting.AbsoluteGameServerLogDirectory,
+		InjectFleetRoleCredentials: cfg.Hosting.GameLift.InjectFleetRoleCredentials,
+		RoleArn:                    cfg.Hosting.GameLift.FleetRoleArn,
+		RoleSessionName:            cfg.Hosting.GameLift.FleetRoleSessionName,
 	},
 		logger,
 		spanner,

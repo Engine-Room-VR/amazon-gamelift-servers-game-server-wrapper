@@ -150,6 +150,24 @@ func (multiplexGame *MultiplexGame) Run(ctx context.Context, startArgs *game.Sta
 	}
 	multiplexGame.logger.DebugContext(ctx, "cli args: ", "args", processArgs)
 
+	// If AWS credentials were provided in the hosting start event, set them as env vars for the child process
+	if startArgs != nil && startArgs.HostingStart != nil && startArgs.HostingStart.AwsCredentials != nil {
+		creds := startArgs.HostingStart.AwsCredentials
+		procCfg := &process.Config{
+			EnvVars: map[string]string{
+				"AWS_ACCESS_KEY_ID":     creds.AccessKeyId,
+				"AWS_SECRET_ACCESS_KEY": creds.SecretAccessKey,
+				"AWS_SESSION_TOKEN":     creds.SessionToken,
+			},
+			WorkingDirectory: build.WorkingDir,
+			ExeName:          build.RelativeExePath,
+		}
+		multiplexGame.proc = process.New(procCfg, multiplexGame.logger)
+		if err := multiplexGame.proc.Init(ctx); err != nil {
+			return fmt.Errorf("failed to initialize game process with credentials: %w", err)
+		}
+	}
+
 	multiplexGame.logger.DebugContext(ctx, "Creating log files")
 	if err := multiplexGame.createLogStreams(ctx, startArgs.LogDirectory); err != nil {
 		multiplexGame.logger.Error("failed to create log streams for stdout and stderr", "error", err)

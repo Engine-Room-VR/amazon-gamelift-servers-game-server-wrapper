@@ -31,10 +31,13 @@ type Config struct {
 // ConfigWrapper provides a wrapper configuration structure for additional
 // server configuration options, particularly for Amazon GameLift Anywhere setup.
 type ConfigWrapper struct {
-	LogConfig         LogConfig         `mapstructure:"log-config" yaml:"log-config"`
-	Anywhere          AnywhereConfig    `mapstructure:"anywhere" yaml:"anywhere"`
-	Ports             Ports             `mapstructure:"ports" yaml:"ports, omitempty"`
-	GameServerDetails GameServerDetails `mapstructure:"game-server-details" yaml:"game-server-details"`
+	LogConfig                  LogConfig         `mapstructure:"log-config" yaml:"log-config"`
+	Anywhere                   AnywhereConfig    `mapstructure:"anywhere" yaml:"anywhere"`
+	Ports                      Ports             `mapstructure:"ports" yaml:"ports, omitempty"`
+	GameServerDetails          GameServerDetails `mapstructure:"game-server-details" yaml:"game-server-details"`
+	InjectFleetRoleCredentials bool              `mapstructure:"inject-fleet-role-credentials" yaml:"inject-fleet-role-credentials"`
+	FleetRoleArn               string            `mapstructure:"fleet-role-arn" yaml:"fleet-role-arn"`
+	FleetRoleSessionName       string            `mapstructure:"fleet-role-session-name" yaml:"fleet-role-session-name"`
 }
 
 // LogConfig defines logging-specific configuration options.
@@ -214,6 +217,9 @@ func AdaptConfigWrapperToConfig(configWrapper *ConfigWrapper, cfg *Config) error
 					IPv4Address:        configWrapper.Anywhere.IPv4,
 				},
 			},
+			InjectFleetRoleCredentials: configWrapper.InjectFleetRoleCredentials,
+			FleetRoleArn:               configWrapper.FleetRoleArn,
+			FleetRoleSessionName:       configWrapper.FleetRoleSessionName,
 		},
 	}
 

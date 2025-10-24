@@ -29,8 +29,11 @@ type ProcessInfo struct {
 type GameLift struct {
 	Anywhere Anywhere `mapstructure:"anywhere" yaml:"anywhere"`
 	/// To be filled in by another source, not config
-	Port      int `mapstructure:"-" yaml:"-"`
-	QueryPort int `mapstructure:"-" yaml:"-"`
+	Port                       int    `mapstructure:"-" yaml:"-"`
+	QueryPort                  int    `mapstructure:"-" yaml:"-"`
+	InjectFleetRoleCredentials bool   `mapstructure:"injectFleetRoleCredentials" yaml:"injectFleetRoleCredentials"`
+	FleetRoleArn               string `mapstructure:"fleetRoleArn" yaml:"fleetRoleArn"`
+	FleetRoleSessionName       string `mapstructure:"fleetRoleSessionName" yaml:"fleetRoleSessionName,omitempty"`
 }
 
 // AnywhereHostConfig defines the configuration for an Amazon GameLift Anywhere host.

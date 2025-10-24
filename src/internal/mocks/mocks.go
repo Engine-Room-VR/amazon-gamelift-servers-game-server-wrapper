@@ -58,6 +58,12 @@ type GameLiftSdkMock struct {
 	ProcessEndingCalled          bool
 	ActivateGameSessionCalled    bool
 	DestroyCalled                bool
+	FleetRoleAccessKeyId         string
+	FleetRoleSecretAccessKey     string
+	FleetRoleSessionToken        string
+	GetFleetRoleCredentialsError error
+	LastRoleArn                  string
+	LastRoleSessionName          string
 }
 
 func (gameLiftSdkMock *GameLiftSdkMock) InitSDK(ctx context.Context, params server.ServerParameters) error {
@@ -90,4 +96,10 @@ func (gameLiftSdkMock *GameLiftSdkMock) ActivateGameSession(ctx context.Context)
 func (gameLiftSdkMock *GameLiftSdkMock) Destroy(ctx context.Context) error {
 	gameLiftSdkMock.DestroyCalled = true
 	return gameLiftSdkMock.InitSdkError
+}
+
+func (gameLiftSdkMock *GameLiftSdkMock) GetFleetRoleCredentials(ctx context.Context, roleArn string, roleSessionName string) (string, string, string, error) {
+	gameLiftSdkMock.LastRoleArn = roleArn
+	gameLiftSdkMock.LastRoleSessionName = roleSessionName
+	return gameLiftSdkMock.FleetRoleAccessKeyId, gameLiftSdkMock.FleetRoleSecretAccessKey, gameLiftSdkMock.FleetRoleSessionToken, gameLiftSdkMock.GetFleetRoleCredentialsError
 }
